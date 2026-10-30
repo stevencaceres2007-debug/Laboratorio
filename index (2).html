@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laboratorio Interactivo: Mantenimiento e Investigación</title>
+  <!-- Chart.js para gráficos estadísticos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #2563eb;
+      --secondary: #059669;
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --border: #cbd5e1;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; line-height: 1.5; }
+
+    header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      color: white;
+      padding: 28px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    header h1 { font-size: 1.9rem; margin-bottom: 8px; font-weight: 700; }
+    header p { font-size: 1rem; opacity: 0.95; font-weight: 300; }
+
+    /* Indicadores KPI */
+    .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; box-shadow: var(--shadow); }
+    .kpi-card .val { font-size: 1.8rem; font-weight: 800; color: var(--primary-light); }
+    .kpi-card .lbl { font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Navegación por pestañas */
+    nav { display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 2px solid var(--border); overflow-x: auto; padding-bottom: 4px; }
+    nav button { background: var(--surface); border: 1px solid var(--border); padding: 12px 20px; border-radius: 10px 10px 0 0; cursor: pointer; font-weight: 700; color: var(--text); white-space: nowrap; transition: all 0.25s ease; }
+    nav button.active { background: var(--primary-light); color: white; border-color: var(--primary-light); transform: translateY(-2px); }
+
+    /* Secciones de módulos */
+    .module { display: none; background: var(--surface); padding: 28px; border-radius: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .module.active { display: block; }
+
+    h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+    h3 { color: var(--text); margin: 24px 0 14px; font-size: 1.15rem; }
+
+    /* MÓDULO 1: ALINEACIÓN DE 4 EN 4 */
+    .grid-4x2 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 1200px) {
+      .grid-4x2 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .grid-4x2 { grid-template-columns: 1fr; }
+    }
+
+    .card-interactive {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--primary-light);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+    .card-interactive:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.12);
+      border-top-color: var(--secondary);
+      background: #ffffff;
+    }
+    .card-interactive img, .card-interactive svg, .card-interactive * {
+      pointer-events: none;
+    }
+    .card-interactive img, .card-interactive svg {
+      width: 100%;
+      height: 125px;
+      object-fit: cover;
+      background: #e2e8f0;
+    }
+    .card-content {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+    .card-interactive h4 {
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-interactive h4 span {
+      font-size: 0.7rem;
+      background: var(--primary-light);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .card-interactive p { font-size: 0.85rem; color: #475569; line-height: 1.4; }
+
+    /* Galería de imágenes secundarias */
+    .image-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-bottom: 24px; }
+    .image-card { background: #f8fafc; border-radius: 12px; padding: 12px; text-align: center; border: 1px solid var(--border); }
+    .image-card img, .image-card svg { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; background: #e2e8f0; pointer-events: none; }
+    .image-card p { font-size: 0.85rem; color: #334155; font-weight: 700; }
+
+    /* Ventana Modal Emergente */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.75);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: white;
+      max-width: 620px;
+      width: 100%;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+      position: relative;
+      animation: modalFadeIn 0.25s ease-out;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px; }
+    .modal-header h3 { color: var(--primary); margin: 0; }
+    .modal-close { background: #f1f5f9; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { background: #e2e8f0; color: #0f172a; }
+    .modal-body { font-size: 0.98rem; color: #334155; line-height: 1.6; }
+
+    /* Controles y Dropzone */
+    .controls-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; background: #f8fafc; padding: 18px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 24px; }
+    .control-group { display: flex; flex-direction: column; gap: 6px; }
+    .control-group label { font-size: 0.85rem; font-weight: 700; color: #334155; }
+    .control-group input, .control-group select, .control-group textarea { padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; width: 100%; background: white; }
+
+    .dropzone { border: 2px dashed var(--primary-light); border-radius: 12px; padding: 24px; text-align: center; background: #eff6ff; cursor: pointer; margin-bottom: 24px; transition: all 0.2s; }
+    .dropzone:hover { background: #dbeafe; border-color: var(--primary); }
+
+    .btn { background: var(--secondary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn:hover { background: #047857; transform: translateY(-1px); }
+    .btn-secondary { background: var(--primary-light); }
+    .btn-secondary:hover { background: var(--primary); }
+    .btn-danger { background: var(--danger); }
+
+    /* Tablas */
+    .table-container { overflow-x: auto; max-height: 400px; border: 1px solid var(--border); border-radius: 10px; margin-top: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; position: sticky; top: 0; z-index: 10; color: var(--primary); font-weight: 700; border-bottom: 2px solid var(--border); }
+    tr:nth-child(even) { background: #fafafa; }
+    .missing-val { background: #fee2e2 !important; color: var(--danger); font-weight: 700; }
+    .outlier-val { background: #fef3c7 !important; color: var(--warning); font-weight: 700; }
+
+    /* Gráficos */
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px; margin-top: 24px; }
+    .chart-card { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
+
+    /* Diseño de Investigación (Módulo 3) */
+    .design-card { background: #f8fafc; border: 1px solid var(--border); border-left: 6px solid var(--primary-light); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03); }
+    .design-card h3 { color: var(--primary); margin-top: 0; margin-bottom: 10px; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; }
+    .design-card p { color: #334155; font-size: 0.95rem; line-height: 1.6; margin-bottom: 8px; }
+    .design-card ul { margin-left: 20px; color: #475569; font-size: 0.9rem; line-height: 1.5; }
+
+    /* Quiz y Caso Práctico */
+    .case-box { background: #eff6ff; border-left: 6px solid var(--primary-light); padding: 20px; border-radius: 10px; margin-bottom: 24px; }
+    .case-box h4 { color: var(--primary); margin-bottom: 8px; font-size: 1.1rem; }
+
+    .quiz-item { margin-bottom: 20px; padding: 18px; border: 1px solid var(--border); border-radius: 10px; background: #f8fafc; }
+    .quiz-item .mini-caso { font-size: 0.88rem; color: #334155; background: #e2e8f0; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px; font-style: italic; }
+    .quiz-item p { font-weight: 700; margin-bottom: 12px; color: #1e293b; }
+    .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+
+    /* Constancia */
+    #certificate { display: none; border: 4px double var(--primary); padding: 28px; border-radius: 12px; background: #fff; margin-top: 24px; text-align: center; }
+
+    @media print {
+      nav, .controls-panel, .dropzone, .btn, header { display: none !important; }
+      .module { display: block !important; box-shadow: none; border: none; padding: 0; margin-bottom: 20px; }
+      #certificate { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Laboratorio Interactivo: Mantenimiento Preventivo y Paradas de Bombas</h1>
+    <p>Unidad 2: Diseño de la Investigación Científica — 20 Bombas | 12 Meses | 240 Registros Base</p>
+  </header>
+
+  <!-- Indicadores KPI -->
+  <div class="kpi-container">
+    <div class="kpi-card"><div class="val" id="kpi-total">240</div><div class="lbl">Registros Analizados</div></div>
+    <div class="kpi-card"><div class="val" id="kpi-cumpl">82.4%</div><div class="lbl">Cumplimiento Oportuno Promedio</div></div>
+    <div class="kpi-card"><div class="val" id="kpi-paradas">34.2 h</div><div class="lbl">Tasa Prom. Paradas / 1 000 h</div></div>
+    <div class="kpi-card"><div class="val" id="kpi-disp">95.4%</div><div class="lbl">Disponibilidad Operativa Estimada</div></div>
+  </div>
+
+  <nav>
+    <button class="active" onclick="showModule('mod-presentacion', this)">1. Presentación</button>
+    <button onclick="showModule('mod-datos', this)">2. Módulo de Datos</button>
+    <button onclick="showModule('mod-diseno', this)">3. Diseño de Investigación</button>
+    <button onclick="showModule('mod-literatura', this)">4. Literatura</button>
+    <button onclick="showModule('mod-evaluacion', this)">5. Evaluación y Exportación</button>
+  </nav>
+
+  <!-- MÓDULO 1: PRESENTACIÓN -->
+  <section id="mod-presentacion" class="module active">
+    <h2>1. Presentación del Caso y Matriz de Alineación Metodológica</h2>
+    <p style="margin-bottom: 20px; color: #475569;">Haz clic en cualquiera de las tarjetas para desplegar el contenido detallado en una ventana emergente:</p>
+
+    <div class="grid-4x2">
+      <div class="card-interactive" data-modal-id="1">
+        <svg viewBox="0 0 300 125"><rect width="300" height="125" fill="#1e3a8a"/><circle cx="80" cy="62" r="35" fill="#3b82f6" opacity="0.6"/><path d="M140 35 h100 v10 h-100 z M140 55 h70 v10 h-70 z M140 75 h85 v10 h-85 z" fill="#60a5fa"/><text x="80" y="68" fill="white" font-size="22" text-anchor="middle" font-weight="bold">240</text></svg>
+        <div class="card-content">
+          <h4>1. Datos Disponibles <span>Ver más</span></h4>
+          <p>Monitoreo mensual de 20 bombas centrífugas en 12 meses (240 observaciones base).</p>
+        </div>
+      </div>
+
+      <div class="card-interactive" data-modal-id="2">
+        <svg viewBox="0 0 300 125">
+          <rect width="300" height="125" fill="#0f172a"/>
+          <path d="M50 95 L110 45 L170 70 L250 25" stroke="#ef4444" stroke-width="5" fill="none"/>
+          <circle cx="250" cy="25" r="7" fill="#ef4444"/>
+          <text x="150" y="110" fill="#94a3b8" font-size="12" text-anchor="middle">Incertidumbre en Paradas</text>
+        </svg>
+        <div class="card-content">
+          <h4>2. Problema Delimitado <span>Ver más</span></h4>
+          <p>Incertidumbre sobre la efectividad del mantenimiento preventivo en paradas no programadas.</p>
+        </div>
+      </div>
+
+      <div class="card-interactive" data-modal-id="3">
+        <svg viewBox="0 0 300 125"><rect width="300" height="125" fill="#047857"/><rect x="40" y="25" width="220" height="75" rx="8" fill="#10b981" opacity="0.3" stroke="white" stroke-width="2"/><text x="150" y="68" fill="white" font-size="16" text-anchor="middle" font-weight="bold">20 Bombas | 12 Meses</text></svg>
+        <div class="card-content">
+          <h4>3. Delimitación <span>Ver más</span></h4>
+          <p>Estudio observacional secundario circunscrito a 20 bombas centrífugas con datos sintéticos.</p>
+        </div>
+      </div>
+
+      <div class="card-interactive" data-modal-id="4">
+        <svg viewBox="0 0 300 125"><rect width="300" height="125" fill="#4338ca"/><text x="150" y="75" fill="#a5b4fc" font-size="55" text-anchor="middle" font-weight="bold">?</text></svg>
+        <div class="card-content">
+          <h4>4. Preguntas de Investigación <span>Ver más</span></h4>
+          <p>Formulación general y específica considerando las variables de antigüedad y carga.</p>
+        </div>
+      </div>
+
+      <div class="card-interactive" data-modal-id="5">
+        <svg viewBox="0 0 300 125"><rect width="300" height="125" fill="#0369a1"/><circle cx="150" cy="62" r="40" fill="none" stroke="#38bdf8" stroke-width="6"/><circle cx="150" cy="62" r="22" fill="none" stroke="#38bdf8" stroke-width="4"/><circle cx="150" cy="62" r="8" fill="#38bdf8"/></svg>
+        <div class="card-content">
+          <h4>5. Objetivos del Estudio <span>Ver más</span></h4>
+          <p>Objetivo general de asociación y objetivos específicos descriptivos con verbos en infinitivo.</p>
+        </div>
+      </div>
+
+      <div class="card-interactive" data-modal-id="6">
+        <svg viewBox="0 0 300 125"><rect width="300" height="125" fill="#b91c1c"/><text x="150" y="62" fill="white" font-size="22" text-anchor="middle" font-weight="bold">H1: ρ &lt; 0</text><text x="150" y="90" fill="#fca5a5" font-size="12" text-anchor="middle">Correlación Negativa Esperada</text></svg>
+        <div class="card-content">
+          <h4>6. Hipótesis de Investigación <span>Ver más</span></h4>
+          <p>Planteamiento de Hipótesis de Trabajo (H1) e Hipótesis Nula (H0) con notación estadística.</p>
+        </div>
+      </div>
+
+      <div class="card-interactive" data-modal-id="7">
+        <svg viewBox="0 0 300 125"><rect width="300" height="125" fill="#15803d"/><rect x="50" y="35" width="80" height="55" rx="6" fill="#22c55e" opacity="0.4"/><rect x="170" y="35" width="80" height="55" rx="6" fill="#22c55e" opacity="0.4"/><text x="90" y="68" fill="white" font-size="14" text-anchor="middle" font-weight="bold">VI (%)</text><text x="210" y="68" fill="white" font-size="14" text-anchor="middle" font-weight="bold">VD (h/1k)</text></svg>
+        <div class="card-content">
+          <h4>7. Variables e Indicadores <span>Ver más</span></h4>
+          <p>Definición de variable predictora, respuesta normalizada y variables de control.</p>
+        </div>
+      </div>
+
+      <div class="card-interactive" data-modal-id="8">
+        <svg viewBox="0 0 300 125"><rect width="300" height="125" fill="#334155"/><path d="M80 35 h140 v55 h-140 z" fill="#475569" stroke="#94a3b8" stroke-width="2"/><text x="150" y="68" fill="white" font-size="15" text-anchor="middle" font-weight="bold">ISO 14224 / RCM II</text></svg>
+        <div class="card-content">
+          <h4>8. Revisión de Literatura <span>Ver más</span></h4>
+          <p>Sustento normativo con ISO 14224, RCM II de Moubray y manuales técnicos de bombas.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Galería Ilustrativa del Sistema Industrial</h3>
+    <div class="image-gallery">
+      <div class="image-card">
+        <svg viewBox="0 0 400 160"><rect width="400" height="160" fill="#1e293b"/><circle cx="130" cy="80" r="45" fill="#2563eb" opacity="0.3" stroke="#3b82f6" stroke-width="4"/><circle cx="130" cy="80" r="18" fill="#60a5fa"/><rect x="175" y="65" width="110" height="30" fill="#64748b" rx="4"/><text x="230" y="84" fill="white" font-size="12" text-anchor="middle" font-weight="bold">Motor / Carga</text><text x="200" y="140" fill="#94a3b8" font-size="13" text-anchor="middle" font-weight="bold">Esquema de Bomba Centrífuga</text></svg>
+        <p>Bomba Centrífuga en Planta Industrial</p>
+      </div>
+      <div class="image-card">
+        <svg viewBox="0 0 400 160">
+          <rect width="400" height="160" fill="#0f172a"/>
+          <path d="M100 110 L160 50 L220 80 L300 30" stroke="#10b981" stroke-width="4" fill="none"/>
+          <circle cx="300" cy="30" r="6" fill="#10b981"/>
+          <text x="200" y="140" fill="#94a3b8" font-size="13" text-anchor="middle" font-weight="bold">Inspección Trazable</text>
+        </svg>
+        <p>Técnico Ejecutando Inspección Preventiva</p>
+      </div>
+      <div class="image-card">
+        <svg viewBox="0 0 400 160"><rect width="400" height="160" fill="#1e1b4b"/><rect x="60" y="30" width="280" height="90" rx="8" fill="#312e81" stroke="#6366f1" stroke-width="2"/><text x="200" y="80" fill="#a5b4fc" font-size="16" text-anchor="middle" font-weight="bold">KPIs en Tiempo Real</text></svg>
+        <p>Monitoreo Digital y Análisis de Datos</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ventana Modal Emergente -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Título del Módulo</h3>
+        <button class="modal-close" onclick="forceCloseModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        Contenido del módulo...
+      </div>
+    </div>
+  </div>
+
+  <!-- MÓDULO 2: DATOS -->
+  <section id="mod-datos" class="module">
+    <h2>2. Módulo de Procesamiento y Carga de Datos</h2>
+    
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+      <p style="font-weight: bold; color: var(--primary); font-size: 1.05rem;">📥 Arrastra un archivo CSV / JSON o haz clic para cargar datos propios</p>
+      <p style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">(Columnas requeridas: id_bomba, mes, tareas_prog, tareas_ejec, h_oper, h_parada, antiguedad, carga)</p>
+      <input type="file" id="file-input" style="display: none;" accept=".csv, .json" onchange="handleFileSelect(event)">
+    </div>
+
+    <div class="controls-panel">
+      <div class="control-group">
+        <label for="seed-input">Semilla Reproducible:</label>
+        <input type="number" id="seed-input" value="12345">
+      </div>
+      <div class="control-group">
+        <label for="missing-input">Datos Faltantes (%):</label>
+        <input type="range" id="missing-input" min="0" max="20" value="5" oninput="document.getElementById('missing-val').innerText=this.value+'%'">
+        <span id="missing-val">5%</span>
+      </div>
+      <div class="control-group">
+        <label for="dup-input">Duplicados (%):</label>
+        <input type="range" id="dup-input" min="0" max="10" value="2" oninput="document.getElementById('dup-val').innerText=this.value+'%'">
+        <span id="dup-val">2%</span>
+      </div>
+      <div class="control-group">
+        <label for="outlier-input">Valores Extremos (%):</label>
+        <input type="range" id="outlier-input" min="0" max="10" value="3" oninput="document.getElementById('outlier-val').innerText=this.value+'%'">
+        <span id="outlier-val">3%</span>
+      </div>
+      <div class="control-group">
+        <label for="treatment-select">Estrategia de Tratamiento:</label>
+        <select id="treatment-select">
+          <option value="none">Sin tratamiento (Datos brutos)</option>
+          <option value="exclude">Exclusión de registros incompletos</option>
+          <option value="impute_median">Imputación por Mediana / Regla lógica</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+      <button class="btn" onclick="generateDataset()">Generar Datos Sintéticos</button>
+      <button class="btn btn-secondary" onclick="applyTreatment()">Aplicar Tratamiento</button>
+      <button class="btn btn-danger" onclick="resetDataset()">Restablecer Base</button>
+    </div>
+
+    <div class="controls-panel" style="background: white;">
+      <div class="control-group">
+        <label>Filtrar por Bomba:</label>
+        <select id="filter-bomba" onchange="renderTable()">
+          <option value="ALL">Todas las bombas</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Filtrar Estado:</label>
+        <select id="filter-status" onchange="renderTable()">
+          <option value="ALL">Todos los registros</option>
+          <option value="MISSING">Solo datos faltantes</option>
+          <option value="OUTLIER">Solo valores extremos</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="data-summary" style="margin-bottom: 12px; font-weight: bold; color: var(--primary);"></div>
+
+    <h3>Vista Previa del Dataset (<span id="data-count">240</span> registros)</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID Compuesto</th>
+            <th>Bomba</th>
+            <th>Mes</th>
+            <th>Prog.</th>
+            <th>Ejec. Tpo.</th>
+            <th>Horas Oper.</th>
+            <th>Horas Parada</th>
+            <th>Antigüedad</th>
+            <th>Carga (%)</th>
+            <th>Cumplimiento (%)</th>
+            <th>Parada / 1000h</th>
+          </tr>
+        </thead>
+        <tbody id="dataset-body">
+          <!-- Carga dinámica -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card"><canvas id="chartMissing"></canvas></div>
+      <div class="chart-card"><canvas id="chartDistribution"></canvas></div>
+      <div class="chart-card"><canvas id="chartScatter"></canvas></div>
+      <div class="chart-card"><canvas id="chartMonthly"></canvas></div>
+    </div>
+  </section>
+
+  <!-- MÓDULO 3: DISEÑO DE INVESTIGACIÓN -->
+  <section id="mod-diseno" class="module">
+    <h2>3. Formulación y Estructura del Diseño de Investigación</h2>
+    <p style="margin-bottom: 20px; color: #475569;">Documentación formal y detallada de los ejes metodológicos que sustentan el estudio analítico de confiabilidad en los equipos industriales:</p>
+
+    <div class="design-card">
+      <h3>🔍 Planteamiento y Delimitación del Problema</h3>
+      <p><strong>Descripción Contextual:</strong> En la actualidad, los sistemas de bombeo de fluidos en plantas industriales experimentan una alta variabilidad en su disponibilidad operativa debido a la aparición imprevista de paradas correctivas. A pesar de contar con programas de mantenimiento preventivo, existe una marcada incertidumbre técnica acerca de la efectividad real con la que se ejecutan dichas pautas de inspección y su impacto directo en la mitigación de fallas críticas.</p>
+      <p><strong>Justificación del Estudio:</strong> La falta de trazabilidad en los tiempos de respuesta y el cumplimiento de las tareas programadas genera sobrecostos operativos y paradas de línea no programadas que afectan la productividad global de la planta.</p>
+    </div>
+
+    <div class="design-card">
+      <h3>❓ Preguntas de Investigación</h3>
+      <p><strong>Pregunta General:</strong> ¿Qué relación matemática y estadística existe entre el porcentaje de cumplimiento oportuno del mantenimiento preventivo y las horas de parada no programada estandarizadas por cada 1 000 horas de operación en el parque de 20 bombas centrífugas?</p>
+      <p><strong>Preguntas Específicas:</strong></p>
+      <ul>
+        <li>¿Cómo modula la antigüedad acumulada de los equipos (años en servicio) la tasa de fallas y la frecuencia de interrupciones no planificadas?</li>
+        <li>¿De qué manera influye el porcentaje de carga operativa sostenida en la aceleración del desgaste mecánico de los sellos e impulsores?</li>
+        <li>¿Cuál es el comportamiento de la tendencia mensual comparativa entre los índices de cumplimiento preventivo y las horas de parada correctiva?</li>
+      </ul>
+    </div>
+
+    <div class="design-card">
+      <h3>🎯 Objetivos del Estudio</h3>
+      <p><strong>Objetivo General:</strong> Evaluar de manera cuantitativa el impacto del cumplimiento oportuno del mantenimiento preventivo sobre la reducción efectiva de las horas de parada no programada, normalizadas por cada 1 000 horas de funcionamiento en bombas centrífugas industriales.</p>
+      <p><strong>Objetivos Específicos:</strong></p>
+      <ul>
+        <li>Analizar la influencia de la variable de control de antigüedad sobre la frecuencia y severidad de las fallas mecánicas registradas.</li>
+        <li>Evaluar estadísticamente el efecto de las condiciones de carga operativa severa en la estabilidad de los equipos monitoreados.</li>
+        <li>Describir la evolución mensual comparativa mediante paneles de control y visualización de datos estandarizados.</li>
+      </ul>
+    </div>
+
+    <div class="design-card">
+      <h3>📈 Planteamiento de Hipótesis Científicas</h3>
+      <p><strong>Hipótesis de Trabajo (H1):</strong> Existe una correlación negativa estadísticamente significativa entre el índice porcentual de cumplimiento oportuno del mantenimiento preventivo y la tasa de horas de parada no programada por cada 1 000 horas de operación en las bombas centrífugas analizadas ($\rho < 0$).</p>
+      <p><strong>Hipótesis Nula (H0):</strong> No existe una correlación estadísticamente significativa entre el índice de cumplimiento preventivo y la tasa de paradas no programadas ($\rho = 0$).</p>
+    </div>
+  </section>
+
+  <!-- MÓDULO 4: LITERATURA -->
+  <section id="mod-literatura" class="module">
+    <h2>4. Matriz de Revisión de Literatura Trazable</h2>
+    <p style="margin-bottom: 16px; color: #475569;">Registro de fuentes verificables. Puedes añadir o editar fuentes dinámicamente:</p>
+
+    <div style="margin-bottom: 16px;">
+      <button class="btn" onclick="addLiteratureRow()">+ Añadir Nueva Referencia</button>
+    </div>
+
+    <div class="table-container">
+      <table id="lit-table">
+        <thead>
+          <tr>
+            <th>Fuente / Autor</th>
+            <th>Título del Estudio / Estándar</th>
+            <th>Aporte Metodológico</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="lit-body">
+          <tr>
+            <td contenteditable="true">ISO 14224:2016</td>
+            <td contenteditable="true">Petroleum, petrochemical and natural gas industries — Collection of reliability data</td>
+            <td contenteditable="true">Define la taxonomía estandarizada para recolección de fallas y tiempos de parada.</td>
+            <td><button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;" onclick="this.closest('tr').remove()">Eliminar</button></td>
+          </tr>
+          <tr>
+            <td contenteditable="true">Moubray, J. (1997)</td>
+            <td contenteditable="true">Reliability-centered Maintenance (RCM II)</td>
+            <td contenteditable="true">Fundamenta la relación entre tareas preventivas y pautas de falla de maquinaria.</td>
+            <td><button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;" onclick="this.closest('tr').remove()">Eliminar</button></td>
+          </tr>
+          <tr>
+            <td contenteditable="true">Bloch, H. P. (2012)</td>
+            <td contenteditable="true">Pump User's Handbook: Life Extension</td>
+            <td contenteditable="true">Sustenta el efecto de las condiciones de carga y antigüedad en fallas de bombas.</td>
+            <td><button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;" onclick="this.closest('tr').remove()">Eliminar</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- MÓDULO 5: EVALUACIÓN Y EXPORTACIÓN -->
+  <section id="mod-evaluacion" class="module">
+    <h2>5. Evaluación del Taller y Exportación</h2>
+    
+    <div class="case-box">
+      <h4>Caso Práctico Aplicado: Falla Crítica en la Bomba BOMBA-08</h4>
+      <p>Durante el mes de junio, la unidad <strong>BOMBA-08</strong> (con 8.5 años de antigüedad y operando a un 95% de capacidad) registró un incremento intempestivo de 180 horas de parada no programada debido a la ruptura intempestiva del sello mecánico. El registro de mantenimiento refleja un cumplimiento del 100% de las tareas programadas el mes anterior, pero el dato de horas de operación cayó a 0 horas en la segunda quincena.</p>
+    </div>
+
+    <h3 style="color: var(--primary); border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 20px;">
+      Resolución de Casos Prácticos y Autoevaluación
+    </h3>
+
+    <form id="quiz-form">
+      <div class="quiz-item">
+        <div class="mini-caso"><strong>Caso 1:</strong> Se detecta un registro con un pico atípico de 180 horas de parada en una bomba debido a una falla mecánica severa.</div>
+        <p>1. ¿Cómo debe abordar el equipo de ingeniería el pico atípico al realizar el análisis estadístico?</p>
+        <div class="quiz-options">
+          <label><input type="radio" name="q1" value="a"> Eliminar la fila del dataset para evitar que altere el promedio general.</label>
+          <label><input type="radio" name="q1" value="b" id="q1-correct"> Conservar el registro marcado como atípico e investigar la causa raíz sin manipular el dato.</label>
+          <label><input type="radio" name="q1" value="c"> Reemplazar las horas de parada por el promedio del resto de bombas.</label>
+        </div>
+      </div>
+
+      <div class="quiz-item">
+        <div class="mini-caso"><strong>Caso 2:</strong> Dos bombas en la planta sufren fallas, una opera 700 horas al mes y otra opera solo 200 horas por mantenimiento de línea.</div>
+        <p>2. ¿Por qué se expresa la parada no programada por cada 1 000 horas de operación en lugar de horas absolutas?</p>
+        <div class="quiz-options">
+          <label><input type="radio" name="q2" value="a"> Para aumentar artificialmente el valor del indicador ante la gerencia.</label>
+          <label><input type="radio" name="q2" value="b" id="q2-correct"> Para normalizar el dato y comparar de forma justa equipos con diferente tiempo de uso.</label>
+          <label><input type="radio" name="q2" value="c"> Porque las normativas internacionales exigen exactamente 1,000 horas de ciclo.</label>
+        </div>
+      </div>
+
+      <div class="quiz-item">
+        <div class="mini-caso"><strong>Caso 3:</strong> La BOMBA-04 estuvo detenida todo el mes por remodelación civil y reportó 0 horas de operación real.</div>
+        <p>3. Si en un mes el denominador de horas de operación es cero, ¿cómo debe registrarse el indicador de parada por 1 000 h?</p>
+        <div class="quiz-options">
+          <label><input type="radio" name="q3" value="a"> Registrar como 0% de eficiencia operativa.</label>
+          <label><input type="radio" name="q3" value="b" id="q3-correct"> Registrar como "No calculable" detallando la razón sin generar divisiones por cero.</label>
+          <label><input type="radio" name="q3" value="c"> Reemplazar las horas de operación por 1 para forzar un resultado numérico.</label>
+        </div>
+      </div>
+
+      <div class="quiz-item">
+        <div class="mini-caso"><strong>Caso 4:</strong> El analista recopila los datos de la misma bomba durante enero, febrero, marzo, hasta completar 12 meses consecutivos.</div>
+        <p>4. ¿Qué representan las 12 mediciones mensuales de una misma bomba en la base de datos?</p>
+        <div class="quiz-options">
+          <label><input type="radio" name="q4" value="a"> 240 equipos totalmente independientes en diferentes plantas.</label>
+          <label><input type="radio" name="q4" value="b" id="q4-correct"> Mediciones repetidas en el tiempo sobre las mismas unidades observacionales.</label>
+          <label><input type="radio" name="q4" value="c"> Tratamientos experimentales aleatorios aplicados al azar.</label>
+        </div>
+      </div>
+
+      <div class="quiz-item">
+        <div class="mini-caso"><strong>Caso 5:</strong> Se comparte un script en Python con datos sintéticos con todo el equipo de trabajo para replicar la investigación.</div>
+        <p>5. ¿Cuál es el rol de la semilla (seed) en el generador de datos sintéticos del laboratorio?</p>
+        <div class="quiz-options">
+          <label><input type="radio" name="q5" value="a" id="q5-correct"> Garantizar la reproducibilidad exacta de la base de datos y sus errores simulados.</label>
+          <label><input type="radio" name="q5" value="b"> Ocultar los errores lógicos del dataset ante los auditores.</label>
+          <label><input type="radio" name="q5" value="c"> Calcular automáticamente el coeficiente de correlación lineal.</label>
+        </div>
+      </div>
+
+      <!-- Apartados separados para Nombre y Cargo -->
+      <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; align-items: center;">
+        <div class="control-group">
+          <label for="student-name">Nombre:</label>
+          <input type="text" id="student-name" placeholder="Ingrese Nombre o Grupo">
+        </div>
+        <div class="control-group">
+          <label for="student-cargo">Cargo:</label>
+          <input type="text" id="student-cargo" placeholder="Ej. Ingeniero / Estudiante">
+        </div>
+      </div>
+
+      <div style="margin-top: 16px;">
+        <button type="button" class="btn" onclick="gradeQuiz()">Evaluar y Generar Constancia</button>
+      </div>
+    </form>
+
+    <div id="quiz-result" style="margin-top: 18px; font-weight: 700; font-size: 1.15rem;"></div>
+    <div id="quiz-performance" style="margin-top: 6px; font-weight: 600; font-size: 1rem; color: #475569;"></div>
+
+    <!-- Constancia Formatica -->
+    <div id="certificate">
+      <h2 style="border: none; color: var(--primary);">CONSTANCIA DE ACTIVIDAD FORMATIVA</h2>
+      <p style="margin: 12px 0;">Se hace constar que el participante:</p>
+      <h3 id="cert-name" style="font-size: 1.5rem; color: var(--secondary); margin-bottom: 4px;">[ Nombre del Participante ]</h3>
+      <p id="cert-cargo" style="font-size: 1rem; color: #475569; font-weight: 600; margin-bottom: 12px;">[ Cargo ]</p>
+      <p style="margin: 12px 0;">Ha completado con éxito el taller interactivo: <strong>De los datos al diseño de investigación</strong></p>
+      <p>Nota de autoevaluación obtenida: <strong id="cert-score">0 / 10</strong></p>
+      <p>Nivel de Desempeño: <strong id="cert-performance" style="color: var(--primary);">[ Nivel ]</strong></p>
+      <p style="font-size: 0.82rem; color: #64748b; margin-top: 18px;"><em>Actividad formativa; no constituye certificación institucional. La nota del quiz es una autoevaluación y no sustituye la calificación docente del taller.</em></p>
+    </div>
+
+    <hr style="margin: 28px 0; border: none; border-top: 1px solid var(--border);">
+
+    <h3>Exportación de Resultados</h3>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <button class="btn" onclick="exportCSV()">Exportar Dataset a CSV</button>
+      <button class="btn btn-secondary" onclick="exportJSON()">Exportar Proyecto a JSON</button>
+      <button class="btn btn-secondary" onclick="window.print()">Imprimir Reporte Completo (PDF)</button>
+    </div>
+  </section>
+
+  <!-- LÓGICA JAVASCRIPT -->
+  <script>
+    let rawDataset = [];
+    let processedDataset = [];
+    let charts = {};
+
+    function showModule(moduleId, btnElement) {
+      document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById(moduleId).classList.add('active');
+      btnElement.classList.add('active');
+    }
+
+    const modalData = {
+      1: {
+        title: "1. Datos Disponibles",
+        content: "Se cuenta con un dataset de 240 registros base correspondientes al monitoreo mensual de 20 bombas centrífugas durante 12 meses. Incluye variables clave de mantenimiento preventivo (tareas programadas vs. ejecutadas oportunas), horas de operación real, paradas no programadas, antigüedad del equipo y porcentaje de carga operativa."
+      },
+      2: {
+        title: "2. Problema Delimitado",
+        content: "Existe elevada incertidumbre en la planta sobre la efectividad real de la ejecución oportuna del mantenimiento preventivo para prevenir paradas no programadas en bombas centrífugas, considerando la interferencia de variables de condición como la antigüedad y la sobrecarga."
+      },
+      3: {
+        title: "3. Delimitación del Estudio",
+        content: "Estudio observacional secundario circunscrito a 20 bombas centrífugas en un período cerrado de 12 meses. Los datos utilizados son sintéticos y generados con algoritmos reproducibles con fines de enseñanza procedimental en ingeniería de mantenimiento."
+      },
+      4: {
+        title: "4. Preguntas de Investigación",
+        content: "<strong>General:</strong> ¿Qué relación existe entre el porcentaje de cumplimiento oportuno del mantenimiento preventivo y las horas de parada no programada por cada 1 000 horas de operación?<br><br><strong>Específicas:</strong><br>• ¿Cómo influye la antigüedad del equipo en la tasa de fallas?<br>• ¿De qué manera las condiciones de carga modulan las paradas?<br>• ¿Cuál es la tendencia mensual comparativa de ambos indicadores?"
+      },
+      5: {
+        title: "5. Objetivos de Investigación",
+        content: "<strong>Objetivo General:</strong> Determinar la relación entre el cumplimiento oportuno del mantenimiento preventivo y las horas de parada no programada ajustadas por 1 000 h de operación.<br><br><strong>Objetivos Específicos:</strong><br>• Analizar la influencia de la antigüedad.<br>• Evaluar el efecto de la carga operativa.<br>• Describir la evolución mensual comparativa mediante paneles de visualización."
+      },
+      6: {
+        title: "6. Hipótesis de Investigación",
+        content: "<strong>Hipótesis de Investigación (H1):</strong> A mayor porcentaje de cumplimiento oportuno del mantenimiento preventivo, menor es la tasa de horas de parada no programada por cada 1 000 horas de operación (ρ < 0).<br><br><strong>Hipótesis Nula (H0):</strong> No existe correlación significativa entre el cumplimiento y la tasa de paradas (ρ = 0)."
+      },
+      7: {
+        title: "7. Variables e Indicadores",
+        content: "• <strong>Predictora (VI):</strong> Cumplimiento oportuno (%) = (Tareas ejecutadas a tiempo / Tareas programadas) × 100.<br>• <strong>Respuesta (VD):</strong> Paradas / 1000 h = (Horas de parada / Horas de operación) × 1000.<br>• <strong>Controles:</strong> Antigüedad (años) y Carga de operación (%)."
+      },
+      8: {
+        title: "8. Revisión de Literatura",
+        content: "El estudio se fundamenta en marcos normativos reconocidos:<br>• <strong>ISO 14224:2016:</strong> Estándar de recolección de datos de confiabilidad.<br>• <strong>Moubray (1997):</strong> RCM II y pautas de falla.<br>• <strong>Bloch (2012):</strong> Manual de usuario de bombas centrífugas y vida útil."
+      }
+    };
+
+    function openModal(id) {
+      const data = modalData[id];
+      if (data) {
+        document.getElementById('modal-title').innerHTML = data.title;
+        document.getElementById('modal-body').innerHTML = data.content;
+        document.getElementById('modal-overlay').classList.add('active');
+      }
+    }
+
+    function closeModal(event) {
+      if (event.target.id === 'modal-overlay') {
+        document.getElementById('modal-overlay').classList.remove('active');
+      }
+    }
+
+    function forceCloseModal() {
+      document.getElementById('modal-overlay').classList.remove('active');
+    }
+
+    function pseudoRandom(seed) {
+      let value = seed;
+      return function() {
+        value = (value * 9301 + 49297) % 233280;
+        return value / 233280;
+      };
+    }
+
+    function generateDataset() {
+      const seed = parseInt(document.getElementById('seed-input').value) || 12345;
+      const missingPct = parseFloat(document.getElementById('missing-input').value) / 100;
+      const dupPct = parseFloat(document.getElementById('dup-input').value) / 100;
+      const outlierPct = parseFloat(document.getElementById('outlier-input').value) / 100;
+
+      const rng = pseudoRandom(seed);
+      rawDataset = [];
+
+      for (let b = 1; b <= 20; b++) {
+        const bombaId = `BOMBA-${String(b).padStart(2, '0')}`;
+        const antiguedad = parseFloat((1 + rng() * 9).toFixed(1));
+        
+        for (let m = 1; m <= 12; m++) {
+          const idCompuesto = `${bombaId}-M${String(m).padStart(2, '0')}`;
+          const prog = Math.floor(4 + rng() * 5);
+          let ejec = Math.floor(prog * (0.6 + rng() * 0.4));
+          let hOper = Math.floor(500 + rng() * 240);
+          
+          const cumplPct = ejec / prog;
+          let hParada = Math.max(0, Math.floor((1 - cumplPct) * 80 * (0.8 + rng() * 0.4)));
+          let carga = Math.floor(60 + rng() * 40);
+
+          if (rng() < outlierPct) {
+            hParada = Math.floor(hParada * 4 + 120);
+          }
+
+          let record = {
+            idCompuesto,
+            bomba: bombaId,
+            mes: m,
+            prog,
+            ejec,
+            hOper,
+            hParada,
+            antiguedad,
+            carga,
+            isMissing: false,
+            isOutlier: hParada > 150
+          };
+
+          if (rng() < missingPct) {
+            record.ejec = null;
+            record.isMissing = true;
+          }
+
+          rawDataset.push(record);
+        }
+      }
+
+      const numDups = Math.floor(rawDataset.length * dupPct);
+      for (let d = 0; d < numDups; d++) {
+        const idx = Math.floor(rng() * rawDataset.length);
+        rawDataset.push({...rawDataset[idx], idCompuesto: rawDataset[idx].idCompuesto + '-DUP'});
+      }
+
+      populateBombaFilter();
+      applyTreatment();
+    }
+
+    function resetDataset() {
+      document.getElementById('seed-input').value = 12345;
+      document.getElementById('missing-input').value = 5;
+      document.getElementById('dup-input').value = 2;
+      document.getElementById('outlier-input').value = 3;
+      generateDataset();
+    }
+
+    function applyTreatment() {
+      const treatment = document.getElementById('treatment-select').value;
+      processedDataset = JSON.parse(JSON.stringify(rawDataset));
+
+      if (treatment === 'exclude') {
+        processedDataset = processedDataset.filter(r => r.ejec !== null);
+      } else if (treatment === 'impute_median') {
+        processedDataset.forEach(r => {
+          if (r.ejec === null) {
+            r.ejec = Math.round(r.prog * 0.8);
+          }
+        });
+      }
+
+      updateKPIs();
+      renderTable();
+      renderCharts();
+    }
+
+    function populateBombaFilter() {
+      const select = document.getElementById('filter-bomba');
+      select.innerHTML = '<option value="ALL">Todas las bombas</option>';
+      const bombas = [...new Set(rawDataset.map(r => r.bomba))];
+      bombas.forEach(b => {
+        select.innerHTML += `<option value="${b}">${b}</option>`;
+      });
+    }
+
+    function updateKPIs() {
+      document.getElementById('kpi-total').innerText = processedDataset.length;
+      
+      let totalProg = 0, totalEjec = 0, totalParadas = 0, totalOper = 0;
+      processedDataset.forEach(r => {
+        if (r.ejec !== null) {
+          totalProg += r.prog;
+          totalEjec += r.ejec;
+        }
+        totalParadas += r.hParada || 0;
+        totalOper += r.hOper || 0;
+      });
+
+      const cumplAvg = totalProg > 0 ? ((totalEjec / totalProg) * 100).toFixed(1) + '%' : 'N/C';
+      const parada1kAvg = totalOper > 0 ? ((totalParadas / totalOper) * 1000).toFixed(1) + ' h' : 'N/C';
+      const dispEst = totalOper + totalParadas > 0 ? ((totalOper / (totalOper + totalParadas)) * 100).toFixed(1) + '%' : 'N/C';
+
+      document.getElementById('kpi-cumpl').innerText = cumplAvg;
+      document.getElementById('kpi-paradas').innerText = parada1kAvg;
+      document.getElementById('kpi-disp').innerText = dispEst;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('dataset-body');
+      tbody.innerHTML = '';
+
+      const bombaFilter = document.getElementById('filter-bomba').value;
+      const statusFilter = document.getElementById('filter-status').value;
+
+      let filtered = processedDataset.filter(r => {
+        if (bombaFilter !== 'ALL' && r.bomba !== bombaFilter) return false;
+        if (statusFilter === 'MISSING' && !r.isMissing) return false;
+        if (statusFilter === 'OUTLIER' && !r.isOutlier) return false;
+        return true;
+      });
+
+      filtered.forEach(r => {
+        const cumplStr = (r.ejec !== null && r.prog > 0) ? ((r.ejec / r.prog) * 100).toFixed(1) + '%' : 'N/C';
+        const parada1kStr = (r.hOper > 0 && r.hParada !== null) ? ((r.hParada / r.hOper) * 1000).toFixed(1) : 'No calculable';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.idCompuesto}</td>
+          <td>${r.bomba}</td>
+          <td>${r.mes}</td>
+          <td>${r.prog}</td>
+          <td class="${r.ejec === null ? 'missing-val' : ''}">${r.ejec !== null ? r.ejec : 'NaN'}</td>
+          <td>${r.hOper}</td>
+          <td class="${r.isOutlier ? 'outlier-val' : ''}">${r.hParada}</td>
+          <td>${r.antiguedad}</td>
+          <td>${r.carga}%</td>
+          <td>${cumplStr}</td>
+          <td>${parada1kStr}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('data-count').innerText = filtered.length;
+      document.getElementById('data-summary').innerText = `Mostrando ${filtered.length} de ${processedDataset.length} registros | Faltantes en muestra: ${rawDataset.filter(r => r.ejec === null).length}`;
+    }
+
+    function renderCharts() {
+      Object.keys(charts).forEach(key => charts[key].destroy());
+
+      // 1. Datos Faltantes
+      const ctx1 = document.getElementById('chartMissing').getContext('2d');
+      const missingEjec = rawDataset.filter(r => r.ejec === null).length;
+      charts.missing = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: ['Tareas Ejecutadas', 'Horas Operación', 'Horas Parada'],
+          datasets: [{
+            label: '% Datos Faltantes',
+            data: [(missingEjec/rawDataset.length)*100, 0, 0],
+            backgroundColor: 'rgba(220, 38, 38, 0.85)',
+            borderColor: '#dc2626',
+            borderWidth: 2,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { title: { display: true, text: '1. % Valores Faltantes por Variable', font: { size: 14, weight: 'bold' } } },
+          scales: { y: { beginAtZero: true, max: 25 } }
+        }
+      });
+
+      // 2. Distribución de Horas de Parada
+      const ctx2 = document.getElementById('chartDistribution').getContext('2d');
+      const grad2 = ctx2.createLinearGradient(0, 0, 0, 300);
+      grad2.addColorStop(0, 'rgba(37, 99, 235, 0.35)');
+      grad2.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
+      charts.dist = new Chart(ctx2, {
+        type: 'line',
+        data: {
+          labels: processedDataset.map((_, i) => i + 1),
+          datasets: [{
+            label: 'Horas de Parada',
+            data: processedDataset.map(r => r.hParada),
+            borderColor: '#2563eb',
+            backgroundColor: grad2,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 2,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { title: { display: true, text: '2. Distribución de Horas de Parada (Tratado)', font: { size: 14, weight: 'bold' } } }
+        }
+      });
+
+      // 3. Dispersión
+      const ctx3 = document.getElementById('chartScatter').getContext('2d');
+      const scatterData = processedDataset
+        .filter(r => r.ejec !== null && r.hOper > 0)
+        .map(r => ({ x: (r.ejec / r.prog) * 100, y: (r.hParada / r.hOper) * 1000 }));
+
+      charts.scatter = new Chart(ctx3, {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: 'Bombas (Meses)',
+            data: scatterData,
+            backgroundColor: 'rgba(5, 150, 105, 0.75)',
+            borderColor: '#059669',
+            pointRadius: 5,
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { title: { display: true, text: '3. Dispersión: Cumplimiento (%) vs Paradas/1,000h', font: { size: 14, weight: 'bold' } } },
+          scales: {
+            x: { title: { display: true, text: 'Cumplimiento Oportuno (%)', font: { weight: 'bold' } } },
+            y: { title: { display: true, text: 'Paradas / 1 000 h', font: { weight: 'bold' } } }
+          }
+        }
+      });
+
+      // 4. Evolución Mensual
+      const ctx4 = document.getElementById('chartMonthly').getContext('2d');
+      const monthlyCumpl = Array(12).fill(0), monthlyParada = Array(12).fill(0), counts = Array(12).fill(0);
+
+      processedDataset.forEach(r => {
+        if (r.ejec !== null && r.mes >= 1 && r.mes <= 12) {
+          const mIdx = r.mes - 1;
+          monthlyCumpl[mIdx] += (r.ejec / r.prog) * 100;
+          monthlyParada[mIdx] += (r.hParada / (r.hOper || 1)) * 1000;
+          counts[mIdx]++;
+        }
+      });
+
+      charts.monthly = new Chart(ctx4, {
+        type: 'line',
+        data: {
+          labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+          datasets: [
+            {
+              label: 'Cumplimiento Promed. (%)',
+              data: monthlyCumpl.map((v, i) => counts[i] ? (v/counts[i]).toFixed(1) : 0),
+              borderColor: '#059669',
+              backgroundColor: '#059669',
+              tension: 0.3,
+              borderWidth: 3,
+              yAxisID: 'y'
+            },
+            {
+              label: 'Paradas Promed. / 1 000 h',
+              data: monthlyParada.map((v, i) => counts[i] ? (v/counts[i]).toFixed(1) : 0),
+              borderColor: '#dc2626',
+              backgroundColor: '#dc2626',
+              tension: 0.3,
+              borderWidth: 3,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { title: { display: true, text: '4. Evolución Mensual Comparativa', font: { size: 14, weight: 'bold' } } },
+          scales: {
+            y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Cumplimiento (%)' } },
+            y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Paradas / 1 000 h' } }
+          }
+        }
+      });
+    }
+
+    function handleFileSelect(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          if (file.name.endsWith('.json')) {
+            rawDataset = JSON.parse(e.target.result);
+          } else {
+            const lines = e.target.result.split('\n');
+            rawDataset = [];
+            for (let i = 1; i < lines.length; i++) {
+              if (!lines[i].trim()) continue;
+              const cols = lines[i].split(',');
+              rawDataset.push({
+                idCompuesto: cols[0],
+                bomba: cols[1],
+                mes: parseInt(cols[2]),
+                prog: parseInt(cols[3]),
+                ejec: cols[4] ? parseInt(cols[4]) : null,
+                hOper: parseInt(cols[5]),
+                hParada: parseInt(cols[6]),
+                antiguedad: parseFloat(cols[7]),
+                carga: parseInt(cols[8]),
+                isMissing: !cols[4],
+                isOutlier: parseInt(cols[6]) > 150
+              });
+            }
+          }
+          populateBombaFilter();
+          applyTreatment();
+          alert('¡Archivo cargado e inspeccionado con éxito!');
+        } catch (err) {
+          alert('Error al procesar el archivo. Verifique el formato.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function addLiteratureRow() {
+      const tbody = document.getElementById('lit-body');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td contenteditable="true">Nueva Fuente</td>
+        <td contenteditable="true">Título del Estudio</td>
+        <td contenteditable="true">Aporte metodológico clave</td>
+        <td><button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;" onclick="this.closest('tr').remove()">Eliminar</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    function gradeQuiz() {
+      let score = 0;
+      if (document.getElementById('q1-correct').checked) score += 2;
+      if (document.getElementById('q2-correct').checked) score += 2;
+      if (document.getElementById('q3-correct').checked) score += 2;
+      if (document.getElementById('q4-correct').checked) score += 2;
+      if (document.getElementById('q5-correct').checked) score += 2;
+
+      let performanceText = "";
+      if (score <= 2) {
+        performanceText = "Desempeño: Malo";
+      } else if (score <= 4) {
+        performanceText = "Desempeño: Regular";
+      } else if (score <= 6) {
+        performanceText = "Desempeño: Bueno";
+      } else if (score <= 8) {
+        performanceText = "Desempeño: Sobresaliente";
+      } else {
+        performanceText = "Desempeño: Excelente";
+      }
+
+      const studentName = document.getElementById('student-name').value || 'Participante';
+      const studentCargo = document.getElementById('student-cargo').value || 'Sin cargo especificado';
+      
+      const resDiv = document.getElementById('quiz-result');
+      const perfDiv = document.getElementById('quiz-performance');
+
+      resDiv.innerText = `Puntaje obtenido: ${score} / 10 (${(score/10)*100}%)`;
+      resDiv.style.color = score >= 8 ? 'var(--secondary)' : 'var(--danger)';
+      
+      perfDiv.innerText = performanceText;
+
+      document.getElementById('cert-name').innerText = studentName;
+      document.getElementById('cert-cargo').innerText = studentCargo;
+      document.getElementById('cert-score').innerText = `${score} / 10`;
+      document.getElementById('cert-performance').innerText = performanceText;
+      document.getElementById('certificate').style.display = 'block';
+    }
+
+    function exportCSV() {
+      let csv = 'idCompuesto,bomba,mes,prog,ejec,hOper,hParada,antiguedad,carga\n';
+      processedDataset.forEach(r => {
+        csv += `${r.idCompuesto},${r.bomba},${r.mes},${r.prog},${r.ejec !== null ? r.ejec : ''},${r.hOper},${r.hParada},${r.antiguedad},${r.carga}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'dataset_bombas_centrifugas.csv';
+      a.click();
+    }
+
+    function exportJSON() {
+      const projectData = {
+        meta: { fecha: new Date().toISOString(), totalRegistros: processedDataset.length },
+        dataset: processedDataset
+      };
+      const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'proyecto_laboratorio_mantenimiento.json';
+      a.click();
+    }
+
+    // Inicialización de Eventos de Clic
+    window.onload = function() {
+      generateDataset();
+
+      document.querySelectorAll('.card-interactive').forEach(card => {
+        card.addEventListener('click', function(e) {
+          const modalId = this.getAttribute('data-modal-id');
+          if (modalId) {
+            openModal(parseInt(modalId));
+          }
+        });
+      });
+
+      document.getElementById('modal-overlay').addEventListener('click', function(e) {
+        if (e.target === this) {
+          forceCloseModal();
+        }
+      });
+    };
+  </script>
+</body>
+</html>
